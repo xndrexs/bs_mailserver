@@ -37,16 +37,26 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 	int linemax = 1024;								/* Lange der Zeile */
 	char *line = malloc(linemax);					/* Speicher für Line belegen */
 	int fd_open = 0;								/* Deskriptor zum Öffnen der Datei */
-	int fd_lock = 0;
+	int fd_lock = 0;								/* Deskriptor für Lock-File */
 	int nr = 1;										/* Variable zum Zählen der Abschnitte */
-
+	char lock_path[100];	
+	char *lock_suffix = ".lock";
+	char pid_buffer[10];
 	
 	fi -> filepath = filepath;						/* Filepath merken */
 	fi -> entries = NULL;
 	fi -> totalSize = 0;
 
+	
+
 	/* .lock Datei prüfen/erstellen */
-	if ((fd_lock = open(filepath, O_RDONLY)
+	if ((fd_lock = open(strcat(strcpy(lock_path, filepath), lock_suffix), O_RDWR | O_CREAT | O_EXCL)) < 0){
+		perror("error open");
+	} else {
+		sprintf(pid_buffer, "%d", getpid());
+		write(fd_lock, pid_buffer, strlen(pid_buffer));
+		exit(-1);
+	}
 
 	if ((fd_open = open(filepath, O_RDWR)) < 0) {
 		perror("Error Open");
