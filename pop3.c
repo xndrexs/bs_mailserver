@@ -5,6 +5,9 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <signal.h>
 
 #include "dialog.h"
 #include "database.h"
@@ -32,6 +35,8 @@ int mark_for_dele(DialogRec *d);
 int reset_marked(DialogRec *d);
 int quit_connection(DialogRec *d);
 int get_user(DialogRec *d);
+int kill(pid_t pid, int sig);
+int my_printf(const char *message);
 
 FileIndex *fi;
 int out;
@@ -50,6 +55,27 @@ DialogRec dialogs [] = {
 	{ "quit",			"", 		2,		0,			quit_connection			},
 	{ ""																		}
 };
+
+/* Lock File mit übergebenem Pfad löschen */
+int remove_lock_file(const char *path) {
+	char lock_path[1000];	
+	char *lock_suffix = ".lock";	
+	char *remove_path;
+	remove_path = strcat(strcpy(lock_path, path), lock_suffix);
+	return remove(remove_path);
+}
+
+/* Signal Handler für SIGINT) */
+void handle_signal(int sig) {
+	my_printf("Process interrupted");
+	if (fi) {
+		my_printf("Cleaning up ...");
+		remove_lock_file(fi -> filepath);
+		fi_dispose(fi);
+	}
+	exit(0);
+}
+
 
 int validate_noparam(DialogRec *d) {
 	return strcmp(d->param, "");
@@ -106,9 +132,13 @@ int reset_marked(DialogRec *d) {
 /* quit */
 int quit_connection(DialogRec *d) {
 	int result = validate_noparam(d);
-	char *logging_out = "+OK Logging out.\r\n";
+	char *logging_out = "+OK Bye bye.\r\n";
+
 	if (result == 0){
 		write(out, logging_out, strlen(logging_out));
+		if (remove_lock_file(fi -> filepath) != 0) {
+			perror("error deleting");
+		}
 		fi_compactify(fi);
 		fi_dispose(fi);
 		return -17;
@@ -210,14 +240,58 @@ int show_message_details(DialogRec *d) {
 	return 1;
 }
 
+/* lock */
+int process_lock(const char *filepath) {
+
+	int fd_lock = 0;
+	char lock_path[100];	
+	char *lock_suffix = ".lock";
+	char pid_buffer[10];
+	char *lock;
+	int status;
+	int result;
+	int pid;
+	char *locked_message;
+	
+	lock = strcat(strcpy(lock_path, filepath), lock_suffix);
+	/* .lock Datei prüfen/erstellen */
+	if ((fd_lock = open(lock, O_RDWR | O_CREAT | O_EXCL, 0640)) < 0){	
+		perror("Lock-Datei vorhanden... checking");
+		
+		fd_lock = open(lock, O_RDWR, 0640);
+		if ((read(fd_lock, pid_buffer, 10)) < 0){
+			perror("error read");
+			exit(-1);
+		}
+		pid = atoi(pid_buffer);
+		printf("Locked by: %d\n", pid),
+		result = waitpid(atoi(pid_buffer), &status, WNOHANG);
+		printf("PID: %d, Status: %d\n", result, status);
+		
+		
+		if(kill(pid, 0) == 0) {
+			locked_message = "-ERR Mailbox locked\n";
+			write(out, locked_message, strlen(locked_message));
+			exit(0);
+		} else {
+			my_printf("Overwriting Lock-File, Process dead");
+		}
+	}
+	sprintf(pid_buffer, "%d", getpid());
+	write(fd_lock, pid_buffer, strlen(pid_buffer));
+	
+	return 0;
+}
+
 /* open user mailbox */
 int open_mailbox(char *user) {
 	DBRecord *record = malloc(sizeof(DBRecord));
 	strcpy(record -> cat, cat_mailbox);
 	strcpy(record -> key, user);
 	db_search(path, 0, record);
+	process_lock(record -> value);
 	fi = fi_new(record -> value, seperator);
-	/*free(record);*/
+	free(record);
 	return 0;
 }
 
@@ -229,6 +303,7 @@ int login_user(char *user, char *password) {
 	strcpy(record -> key, user);
 	db_search(path, 0, record);
 	result = !strcmp(record -> value, password);
+	free(record);
 	return result;
 }
 
@@ -282,22 +357,22 @@ int process_pop3(int infd, int outfd) {
 	write(outfd, pop3_ready, strlen(pop3_ready));
 	
 	while(1){
-		line = malloc(linemax);
+		line = calloc(1, linemax);
 		b = buf_new(infd, "\r");
 		buf_readline(b, line, linemax);
 		prolresult = processLine(line, state, dialogs);
+		free(line);
+		free(b);
+		/* quit */
+		if(prolresult.failed == -17){
+			my_printf("Client disconnected");
+			break;
+		}
+		
 		if(prolresult.failed == 0){
 			state = prolresult.dialogrec -> nextstate;
 		} else {
 			write(outfd, err, sizeof(err));
-		}
-		free(line);
-		
-		/* quit */
-		if(prolresult.failed == -17){
-			char *bye = "+OK Bye bye ... \r\n";
-			write(outfd, bye, strlen(bye));
-			break;
 		}
 	}
 	

@@ -16,7 +16,7 @@ char charToLowerCase(char c) {
 
 char *splitStringAtCommand(char *s1, char *s2){
 	
-	char *param = "";
+	char *param = "\0";
 	
 	while(charToLowerCase(*s1) == charToLowerCase(*s2)) {
 		s1++;
@@ -73,7 +73,7 @@ ProlResult processLine(char line[LINEMAX], int state, DialogRec dialogspec[]){
 	
 	ProlResult prolresult;
 	DialogRec *dialog = findDialogRec(line, dialogspec);
-	char *param;
+	char *param = "\n";
 	int valid;
 	
 	/* DialogRec gefunden */
