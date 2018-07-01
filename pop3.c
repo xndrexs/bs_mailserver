@@ -15,7 +15,7 @@
 #include "fileindex.h"
 
 const char ok[] = "+OK\r\n";
-const char err[] = "-ERR\n";
+const char err[] = "-ERR\r\n";
 const char pop3_ready[] = "+OK Ein ganz toller Mailserver.\r\n";
 const char logged_in[] = "+OK Logged in.\r\n";
 /*const char *path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database";*/
