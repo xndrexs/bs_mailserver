@@ -56,7 +56,7 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 		/* Neuer Abschnitt */
 		if(strncmp(line, separator, strlen(separator)) == 0) {
 			
-			fie_cur = malloc(sizeof(FileIndexEntry));
+			fie_cur = calloc(1, sizeof(FileIndexEntry));
 			fie_cur -> nr = nr;
 			fie_cur -> next = NULL;
 			fie_cur -> seekpos = buf_where(buf) - strlen(line) - 1;
@@ -90,6 +90,7 @@ void fi_dispose(FileIndex *fi) {
 		fie = fie -> next;
 		free(fie_cur);
 	}
+	free((char*)(fi -> filepath));
 	free(fi);
 }
 

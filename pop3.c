@@ -18,7 +18,8 @@ const char ok[] = "+OK\r\n";
 const char err[] = "-ERR\n";
 const char pop3_ready[] = "+OK Ein ganz toller Mailserver.\r\n";
 const char logged_in[] = "+OK Logged in.\r\n";
-const char *path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database";
+/*const char *path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database";*/
+const char *path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database";
 const char cat_mailbox[] = "mailbox";
 const char cat_password[] = "password";
 const char seperator[] = "From ";
@@ -248,9 +249,7 @@ int process_lock(const char *filepath) {
 	char *lock_suffix = ".lock";
 	char pid_buffer[10];
 	char *lock;
-	int status;
-	int result;
-	int pid;
+	int status = 0, result = 0, pid = 0;
 	char *locked_message;
 	
 	lock = strcat(strcpy(lock_path, filepath), lock_suffix);
@@ -286,11 +285,13 @@ int process_lock(const char *filepath) {
 /* open user mailbox */
 int open_mailbox(char *user) {
 	DBRecord *record = malloc(sizeof(DBRecord));
+	char *path_to_mb = malloc(DB_VALLEN);
 	strcpy(record -> cat, cat_mailbox);
 	strcpy(record -> key, user);
 	db_search(path, 0, record);
-	process_lock(record -> value);
-	fi = fi_new(record -> value, seperator);
+	strcpy(path_to_mb, record -> value);
+	process_lock(path_to_mb);
+	fi = fi_new(path_to_mb, seperator);
 	free(record);
 	return 0;
 }
