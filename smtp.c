@@ -19,9 +19,12 @@ const char error[] = "500\n";
 const char smtp_ok[] = "250 Ok\r\n";
 const char smtp_quit[] = "221 Bye bye.\r\n";
 const char start_data[] = "354 Data now.\r\n";
+const char *smtp_cat = "smtp";
 int client_socket;
 
 const char *test = "/home/andreas/semester6/betriebssysteme/bs_mailserver/mailbox/test.mbox";
+extern char *path;
+char *path_to_mb;
 
 int my_printf(const char *message);
 int validate_noparam(DialogRec *d);
@@ -33,11 +36,11 @@ int quit_smtp(DialogRec *d);
 
 DialogRec smtp_dialogs [] = {
 	/*command (17)		param (80)	state	nextstate	validator */
-	{ "helo",			"", 		0, 		1,	helo				},
+	{ "helo",			"", 		1, 		1,	helo				},
 	{ "mail from:",		"",			1,		2,	mail_from			},
-	{ "rcpt to:",		"",			3, 		4,	rcpt_to				},
-	{ "data",			"", 		5,		6, 	data				},
-	{ "quit",			"", 		6,		0,	quit_smtp			},
+	{ "rcpt to:",		"",			2, 		3,	rcpt_to				},
+	{ "data",			"", 		0,		4, 	data				},
+	{ "quit",			"", 		4,		0,	quit_smtp			},
 	{ ""															}
 };
 
@@ -45,7 +48,8 @@ DialogRec smtp_dialogs [] = {
 int helo(DialogRec *d){
 	int result = validate_noparam(d);
 	if (result != 0) {
-		result = write(client_socket, smtp_ok, strlen(smtp_ok));
+		write(client_socket, smtp_ok, strlen(smtp_ok));
+		result = 1;
 	}
 	return result;
 }
@@ -54,7 +58,8 @@ int helo(DialogRec *d){
 int mail_from(DialogRec *d){
 	int result = validate_noparam(d);
 	if (result != 0) {
-		result = write(client_socket, smtp_ok, strlen(smtp_ok));
+		write(client_socket, smtp_ok, strlen(smtp_ok));
+		result = 1;
 	}
 	return result;
 }
@@ -62,8 +67,27 @@ int mail_from(DialogRec *d){
 /* rcpt to */
 int rcpt_to(DialogRec *d){
 	int result = validate_noparam(d);
+	DBRecord *record;
 	if (result != 0) {
-		result = write(client_socket, smtp_ok, strlen(smtp_ok));
+		
+		record = malloc(sizeof(DBRecord));
+		strcpy(record -> key, smtp_dialogs[2].param);
+		strcpy(record -> cat, smtp_cat);
+		/* Prüfen, ob Empfänger vorhanden ist */
+		result = db_search(path, 0, record);
+		if (result >= 0) {
+			result = 1;
+			path_to_mb = malloc(DB_VALLEN);
+			strcpy(path_to_mb, record -> value);
+			write(client_socket, smtp_ok, strlen(smtp_ok));
+		} else {
+			result = 0;
+		}
+		free(record);
+		/* Ist vorhanden, wenn der Index von db_search >= 0 ist, 
+		* muss aber etwas größer 0 zurückgeben, damit der Validator 
+		* nicht meckert bzw. der Empfänger vorhanden ist
+		* */
 	}
 	return result;
 }
@@ -71,19 +95,43 @@ int rcpt_to(DialogRec *d){
 /* data */
 int data(DialogRec *d){
 	int result = validate_noparam(d);
-	int linemax = 1024;
+	int linemax = 1024, fd_open, fd_write;
 	char *line;
 	LineBuffer *b;
 	
-	if (result != 0) {
-		result = write(client_socket, start_data, strlen(start_data));
+	if (result == 0) {
+		fd_open = open(test, O_RDWR | O_CREAT | O_TRUNC, 0644);
+		if (fd_open < 0){
+			perror("error read");
+			exit(1);
+		}
+		write(client_socket, start_data, strlen(start_data));
 		while(1){
 			line = calloc(1, linemax);
 			b = buf_new(client_socket, "\r");
 			buf_readline(b, line, linemax);
+			if (strcmp(line, ".") == 0){
+				free(line);
+				free(b);
+				break;
+			}
+			fd_write = write(fd_open, line, strlen(line));
+			if (fd_write < 0){
+				perror("error write");
+				exit(1);
+			}
+			fd_write = write(fd_open, "\r\n", strlen("\r\n"));
+			if (fd_write < 0){
+				perror("error write");
+				exit(1);
+			}
 			free(line);
 			free(b);
 		}
+		close(fd_open);
+		close(fd_write);
+		write(client_socket, smtp_ok, strlen(smtp_ok));
+		result = 1;
 	}
 	return result;
 }
@@ -93,6 +141,10 @@ int quit_smtp(DialogRec *d){
 	write(client_socket, smtp_quit, strlen(smtp_quit));
 	close(client_socket);
 	return validate_noparam(d);
+}
+
+int build_email(){
+	return 0;
 }
 
 

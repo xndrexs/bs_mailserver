@@ -97,7 +97,6 @@ int db_search(const char *filepath, int start, DBRecord *record) {
 		if (fd_read == 0){
 			break;
 		}
-		
 		if((strcmp(result.key, record -> key) == 0 && strcmp(result.cat, record -> cat) == 0) ||
 			(strcmp(record -> key, "") == 0 && strcmp(record -> cat, result.cat) == 0) ||
 			(strcmp(record -> cat, "") == 0 && strcmp(record -> key, result.key) == 0)) {
