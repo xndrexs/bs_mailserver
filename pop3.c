@@ -18,8 +18,8 @@ const char ok[] = "+OK\r\n";
 const char err[] = "-ERR\r\n";
 const char pop3_ready[] = "+OK Ein ganz toller Mailserver.\r\n";
 const char logged_in[] = "+OK Logged in.\r\n";
-/*const char *path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database";*/
-const char *path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database";
+const char *path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database";
+/* const char *path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database";*/
 const char cat_mailbox[] = "mailbox";
 const char cat_password[] = "password";
 const char seperator[] = "From ";
@@ -174,13 +174,13 @@ int show_mailbox_stats(DialogRec *d){
 int show_message(DialogRec *d) {
 	FileIndexEntry *fie;
 	LineBuffer *buf;
-	int index;
+	int index = 0;
 	int lines = 0;
 	int result = validate_noparam(d);
 	int fd_open = 0;
 	int linemax = 1024;
 	char *line = malloc(linemax);
-	char buffer[50] = "\0";
+	char buffer[500] = "\0";
 
 	if (result != 0) {
 		if ((fd_open = open(fi -> filepath, O_RDONLY)) < 0) {

@@ -29,6 +29,8 @@ typedef struct fi
 } FileIndex;
 */
 
+extern char *filepath_tmp;
+
 FileIndex *fi_new(const char *filepath, const char *separator) {
 	
 	FileIndex *fi = malloc(sizeof(FileIndex));		/* Neuer FileIndex */
@@ -38,6 +40,7 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 	char *line = malloc(linemax);					/* Speicher für Line belegen */
 	int fd_open = 0;								/* Deskriptor zum Öffnen der Datei */
 	int nr = 1;										/* Variable zum Zählen der Abschnitte */
+	int head = 0;									/* Für neue Mail nach From */
 	fi -> filepath = filepath;						/* Filepath merken */
 	fi -> entries = NULL;
 	fi -> totalSize = 0;
@@ -55,11 +58,10 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 	while(buf_readline(buf, line, linemax) != -1){
 		/* Neuer Abschnitt */
 		if(strncmp(line, separator, strlen(separator)) == 0) {
-			
+			head = 1;
 			fie_cur = calloc(1, sizeof(FileIndexEntry));
 			fie_cur -> nr = nr;
 			fie_cur -> next = NULL;
-			fie_cur -> seekpos = buf_where(buf) - strlen(line) - 1;
 			fie_cur -> del_flag = 0;
 			/* 1. Eintrag */
 			if ((fi -> entries) == NULL) {
@@ -72,10 +74,15 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 			}
 			fi -> nEntries = nr;
 			nr++;
+		} else {
+			if (head == 1) {
+				fie_cur -> seekpos = buf_where(buf) - strlen(line) - 1;
+				head = 0;
+			}
+			(fie -> lines)++;
+			(fie -> size) += strlen(line) + 1;
+			(fi -> totalSize) += strlen(line) + 1;
 		}
-		(fie -> lines)++;
-		(fie -> size) += strlen(line) +1;
-		(fi -> totalSize) += strlen(line) +1;
 	}
 	free(line);
 	free(buf);
@@ -106,8 +113,21 @@ FileIndexEntry *fi_find(FileIndex *fi, int n) {
 }
 
 int fi_compactify(FileIndex *fi) {
+	int fd_open = 0, fd_write = 0, fd_copy = 0, fd_read = 0;
+	FileIndexEntry *fie = (fi -> entries);
+	char *buffer;
 	
-	
-	
+	fd_open = open(fi -> filepath, O_RDONLY);
+	fd_copy = open(filepath_tmp, O_RDWR | O_CREAT | O_TRUNC, 0640);
+
+	while(fie) {
+		if ((fie -> del_flag) == 0) {
+			lseek(fd_open, fie -> seekpos, SEEK_SET);
+			buffer = calloc(1, fie -> size);
+			fd_read = read(fd_open, buffer, fie -> size);
+			fd_write = write(fd_copy, buffer, fie -> size);
+		}
+		fie = fie -> next;
+	}
 	return 0;
 }

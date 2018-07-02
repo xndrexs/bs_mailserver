@@ -21,7 +21,7 @@ typedef struct lbuf {
 */
 
 LineBuffer *buf_new(int descriptor, const char *linesep) {
-	LineBuffer *buf = malloc(sizeof(LineBuffer));
+	LineBuffer *buf = calloc(1, sizeof(LineBuffer));
 	buf -> descriptor = descriptor;
 	buf -> linesep = linesep;
 	buf -> lineseplen = strlen(linesep);

@@ -11,8 +11,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-/*char *filepath_tmp = "/home/mi/apoeh001/semester6/betriebssysteme/ueb3/Database/database_tmp";*/
-char *filepath_tmp = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database_tmp";
+char *filepath_tmp = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database_tmp";
+/*char *filepath_tmp = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database_tmp";*/
 
 
 int get_filesize(const char *path){
