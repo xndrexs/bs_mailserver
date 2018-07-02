@@ -168,7 +168,7 @@ int data(DialogRec *d){
 			if (strcmp(line, ".") == 0){
 				free(line);
 				free(b);
-				fd_write = write(fd_open, "\r\n", strlen("\r\n"));
+				fd_write = write(fd_open, "\n", strlen("\n"));
 				if (fd_write < 0){
 					perror("error write");
 					exit(1);
@@ -180,7 +180,7 @@ int data(DialogRec *d){
 				perror("error write");
 				exit(1);
 			}
-			fd_write = write(fd_open, "\r\n", strlen("\r\n"));
+			fd_write = write(fd_open, "\n", strlen("\n"));
 			if (fd_write < 0){
 				perror("error write");
 				exit(1);
