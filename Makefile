@@ -10,3 +10,6 @@ pop3: mailserver.c pop3.c dialog.c fileindex.c linebuffer.c database.c smtp.c
 	
 database: db.c database.c
 	$(CC) $(CFLAGS) -o db db.c database.c
+	
+fi: fileindex.c linebuffer.c
+	$(CC) $(CFLAGS) -o fi fileindex.c linebuffer.c

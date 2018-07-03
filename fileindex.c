@@ -41,6 +41,8 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 	int fd_open = 0;								/* Deskriptor zum Öffnen der Datei */
 	int nr = 1;										/* Variable zum Zählen der Abschnitte */
 	int head = 0;									/* Für neue Mail nach From */
+	int size = 0;
+	int seek = 0;								
 	fi -> filepath = filepath;						/* Filepath merken */
 	fi -> entries = NULL;
 	fi -> totalSize = 0;
@@ -55,7 +57,7 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 	
 	buf = buf_new(fd_open, "\n");
 	
-	while(buf_readline(buf, line, linemax) != -1){
+	while((seek = buf_readline(buf, line, linemax)) != -1){
 		/* Neuer Abschnitt */
 		if(strncmp(line, separator, strlen(separator)) == 0) {
 			head = 1;
@@ -69,6 +71,7 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 				fie = fie_cur;
 			/* Weitere Einträge */
 			} else {
+				fie -> size -= 1;
 				fie -> next = fie_cur;
 				fie = fie_cur;				
 			}
@@ -76,12 +79,14 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 			nr++;
 		} else {
 			if (head == 1) {
-				fie_cur -> seekpos = buf_where(buf) - strlen(line) - 1;
+				fie -> seekpos = seek;
 				head = 0;
-			}
+			} 
 			(fie -> lines)++;
-			(fie -> size) += strlen(line) + 1;
-			(fi -> totalSize) += strlen(line) + 1;
+			size = strlen(line) + 1;
+			(fie -> size) += size;
+			(fi -> totalSize) += size;
+			
 		}
 	}
 	free(line);
@@ -113,7 +118,7 @@ FileIndexEntry *fi_find(FileIndex *fi, int n) {
 }
 
 int fi_compactify(FileIndex *fi) {
-	int fd_open = 0, fd_write = 0, fd_copy = 0, fd_read = 0;
+	/*int fd_open = 0, fd_write = 0, fd_copy = 0, fd_read = 0;
 	FileIndexEntry *fie = (fi -> entries);
 	char *buffer;
 	
@@ -128,6 +133,20 @@ int fi_compactify(FileIndex *fi) {
 			fd_write = write(fd_copy, buffer, fie -> size);
 		}
 		fie = fie -> next;
-	}
+	}*/
 	return 0;
 }
+
+/*
+int main(){
+	FileIndex *fi = fi_new("/home/andreas/semester6/betriebssysteme/bs_mailserver/mailbox/joendhard.mbox", "From ");
+
+	FileIndexEntry *fie = (fi -> entries);
+	while(fie) {
+		printf("Entry %d - Size: %d / Lines: %d / Seek: %d\n", fie ->nr, fie -> size, fie -> lines, fie -> seekpos);
+		fie = fie -> next;
+	}
+	
+	return 0;
+}
+*/

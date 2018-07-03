@@ -45,73 +45,59 @@ int read_buffer(LineBuffer *b) {
 	b -> bytesread = b -> bytesread + fd_read;
 	b -> end = fd_read;
 	b -> here = 0;
-	/*
-	printf("Reading buffer ... \n");
-	printf("... bytes read: %u\n", fd_read);
-	printf("Total Bytes read: %d\n", b -> bytesread);
-	*/
 	return fd_read;
 }
 
 
 int buf_readline(LineBuffer *b, char *line, int linemax) {
 	
-	char *current_pos = &(b -> buffer[b -> here]);
-	int line_cur = 0;
-	/*char *display_line = line;*/
+	/* Zeiger für aktuellen Buchstaben und Seperator */
+	char *current_letter = &(b -> buffer[b -> here]);
+	char *current_sep = b -> linesep;
+	char *display_line = line;
 	
+	/* Position des Zeilenanfangs merken */
+	int offset = buf_where(b);
 	
-	/*printf("----------------------------\n");*/
-	
-	
+	/* 1. Mal einlesen */
 	if (b -> bytesread == 0) {
 		read_buffer(b);
 	}
 	
-	/*
-	printf("Buffer here: %u\n", b -> here);
-	printf("Buffer end: %u\n", b -> end);
-	*/
-	
 	while(1) {
-		/* Zeilentrenner erreicht */
-		if (*current_pos == *(b -> linesep)){
-			b -> here++;
-			/*printf("LINE BREAK\n");*/
-			break;
-		/* Zeichen in Line kopieren */
-		/*} else if (b -> here == linemax){
-			printf("LINE MAX\n");
-			break;*/
-			/* Buffer-Ende erreicht */
-		} else if(b -> here >= b -> end) {
-			/*printf("End of Buffer reached: %d / %d\n", b -> here, b -> end);*/
+		
+		/* Ende des Buffers erreicht */
+		if(b -> here >= b -> end) {
 			read_buffer(b);
-			current_pos = &(b -> buffer[b -> here]);
+			current_letter = &(b -> buffer[b -> here]);
 			/* Nichts mehr einzulesen */
 			if (b -> end == 0) {
-				/*
-				printf("TOTAL BYTES READ: %d\n", b -> bytesread);
-				printf("EOF\n");
-				*/
 				return -1;
 			}
-		} else {
-			*line = *current_pos;
-			line++;
-			current_pos++;
 		}
-		
+		/* Anfang des Zeilentrenners erreicht */
+		if(*current_letter == *current_sep) {
+			b -> here++;
+			current_letter++;
+			if(b -> lineseplen == 1){
+				break;
+			}
+			current_sep++;
 
+			if(*current_letter == *current_sep) {
+				b -> here++;
+				current_letter++;
+				break;
+			}
+		}
+		/* Zeichen kopieren, Zeiger vorwärts */
+		*line = *current_letter;
+		line++;
+		current_letter++;
 		b -> here++;
-		
-		line_cur++;
 	}
 	*line = '\0';
-	
-	/*printf("Buffer new here: %d\n", b -> here);*/
-	
-	return (b -> bytesread) + (b -> here);
+	return offset;
 }
 
 int buf_where(LineBuffer *b) {

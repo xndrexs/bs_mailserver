@@ -9,12 +9,12 @@
 
 #include <string.h>
 
-
+/*
 const char *path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database";
 const char *tmp_path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database_tmp";
-
-/* const char *path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database";
-const char *tmp_path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database_tmp"; */
+*/
+const char *path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database";
+const char *tmp_path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database_tmp";
 
 int show_dbrecord(DBRecord *rec){
 	char out[sizeof(DBRecord) + 7] = {0};

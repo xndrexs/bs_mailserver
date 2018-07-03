@@ -23,8 +23,8 @@ const char start_data[] = "354 Data now.\r\n";
 const char *smtp_cat = "smtp";
 int client_socket = 0;
 
-/* const char *test = "/home/andreas/semester6/betriebssysteme/bs_mailserver/mailbox/test.mbox"; */
-const char *tmp_mail = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/mailbox/tmp_mail";
+const char *tmp_mail = "/home/andreas/semester6/betriebssysteme/bs_mailserver/mailbox/tmp_mail";
+/* const char *tmp_mail = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/mailbox/tmp_mail"; */
 extern char *path;
 extern char *cat_mailbox;
 char *path_to_mb;
@@ -37,6 +37,7 @@ int mail_from(DialogRec *d);
 int rcpt_to(DialogRec *d);
 int data(DialogRec *d);
 int quit_smtp(DialogRec *d);
+int process_lock(const char *filepath);
 
 DialogRec smtp_dialogs [] = {
 	/*command (17)		param (80)	state	nextstate	validator */
@@ -77,7 +78,7 @@ int build_email(){
 	}
 	
 	/* From Zeile generieren und schreiben */
-	sprintf(out, "From %s %s\r\n", smtp_dialogs[1].param, ctime(&time));
+	sprintf(out, "From %s %s\n", smtp_dialogs[1].param, ctime(&time));
 	
 	if ((fd_write = write(fd_open, out, strlen(out))) < 0){
 		perror("error write");
@@ -88,6 +89,7 @@ int build_email(){
 		perror("error write");
 	}
 	
+	close(fd_open);
 	remove(tmp_mail);
 	return 0;
 }
@@ -133,6 +135,7 @@ int rcpt_to(DialogRec *d){
 				path_to_mb = malloc(DB_VALLEN); 
 				strcpy(path_to_mb, record -> value); /* Mailbox merken */
 				write(client_socket, smtp_ok, strlen(smtp_ok));
+				process_lock(path_to_mb);
 			}
 		} else {
 			result = 0;

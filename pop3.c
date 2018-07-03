@@ -18,8 +18,8 @@ const char ok[] = "+OK\r\n";
 const char err[] = "-ERR\r\n";
 const char pop3_ready[] = "+OK Ein ganz toller Mailserver.\r\n";
 const char logged_in[] = "+OK Logged in.\r\n";
-const char *path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database";
-/* const char *path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database";*/
+/* const char *path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database"; */
+const char *path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database";
 const char cat_mailbox[] = "mailbox";
 const char cat_password[] = "password";
 const char seperator[] = "From ";
@@ -175,7 +175,7 @@ int show_message(DialogRec *d) {
 	FileIndexEntry *fie;
 	LineBuffer *buf;
 	int index = 0;
-	int lines = 0;
+	int lines = 1;
 	int result = validate_noparam(d);
 	int fd_open = 0;
 	int linemax = 1024;
@@ -207,6 +207,15 @@ int show_message(DialogRec *d) {
 	}
 	free(line);
 	return result;
+}
+
+int show_entries(FileIndex *fi){
+	FileIndexEntry *fie = (fi -> entries);
+	while(fie) {
+		printf("Entry %d - Size: %d / Lines: %d / Seek: %d\n", fie ->nr, fie -> size, fie -> lines, fie -> seekpos);
+		fie = fie -> next;
+	}
+	return 1;
 }
 
 /* list */
@@ -378,13 +387,4 @@ int process_pop3(int infd, int outfd) {
 	}
 	
 	return 0;
-}
-
-int show_entries(FileIndex *fi){
-	FileIndexEntry *fie = (fi -> entries);
-	while(fie) {
-		printf("Entry %d - Size: %d / Lines: %d / Seek: %d\n", fie ->nr, fie -> size, fie -> lines, fie -> seekpos);
-		fie = fie -> next;
-	}
-	return 1;
 }

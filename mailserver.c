@@ -36,7 +36,7 @@ int my_printf(const char *message){
 
 /* Neue Client Verbindung */
 int handle_connection(int client_socket) {
-	my_printf("Client connected");
+	my_printf("Client connected on POP3");
 	process_pop3(client_socket, client_socket);
 	close(client_socket);
 	return 0;
@@ -44,6 +44,7 @@ int handle_connection(int client_socket) {
 
 /* Neue SMTP Connection */
 int handle_smtp_connection(int client_socket) {
+	my_printf("Client connected on SMTP");
 	pthread_t tid[PMAX];
 	pthread_create(&tid[pcurrent], NULL, process_smtp, &client_socket);
 	pcurrent++;
