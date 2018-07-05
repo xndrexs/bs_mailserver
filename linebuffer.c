@@ -35,14 +35,11 @@ void buf_dispose(LineBuffer *b) {
 }
 
 int read_buffer(LineBuffer *b) {
-	
 	int fd_read = 0;
-	
 	if((fd_read = read(b -> descriptor, b -> buffer, LINEBUFFERSIZE)) < 0) {
 		perror("read, read_line");
 	}
-	
-	b -> bytesread = b -> bytesread + fd_read;
+	b -> bytesread += fd_read;
 	b -> end = fd_read;
 	b -> here = 0;
 	return fd_read;
@@ -57,6 +54,7 @@ int buf_readline(LineBuffer *b, char *line, int linemax) {
 	
 	/* Position des Zeilenanfangs merken */
 	int offset = buf_where(b);
+	int linecur = 0;
 	
 	/* 1. Mal einlesen */
 	if (b -> bytesread == 0) {
@@ -90,10 +88,11 @@ int buf_readline(LineBuffer *b, char *line, int linemax) {
 			}
 		}
 		/* Zeichen kopieren, Zeiger vorwärts */
-		*line = *current_letter;
-		line++;
-		current_letter++;
+		*line++ = *current_letter++;
 		b -> here++;
+		if(linecur++ > linemax) {
+			break;
+		}
 	}
 	*line = '\0';
 	return offset;

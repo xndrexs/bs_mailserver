@@ -23,8 +23,8 @@ const char start_data[] = "354 Data now.\r\n";
 const char *smtp_cat = "smtp";
 int client_socket = 0;
 
-const char *tmp_mail = "/home/andreas/semester6/betriebssysteme/bs_mailserver/mailbox/tmp_mail";
-/* const char *tmp_mail = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/mailbox/tmp_mail"; */
+/*const char *tmp_mail = "/home/andreas/semester6/betriebssysteme/bs_mailserver/mailbox/tmp_mail";*/
+const char *tmp_mail = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/mailbox/tmp_mail"; 
 extern char *path;
 extern char *cat_mailbox;
 char *path_to_mb;
@@ -38,6 +38,7 @@ int rcpt_to(DialogRec *d);
 int data(DialogRec *d);
 int quit_smtp(DialogRec *d);
 int process_lock(const char *filepath);
+int remove_lock_file(const char *path);
 
 DialogRec smtp_dialogs [] = {
 	/*command (17)		param (80)	state	nextstate	validator */
@@ -91,6 +92,7 @@ int build_email(){
 	
 	close(fd_open);
 	remove(tmp_mail);
+	remove_lock_file(path_to_mb);
 	return 0;
 }
 
@@ -107,7 +109,10 @@ int helo(DialogRec *d){
 /* mail from */
 int mail_from(DialogRec *d){
 	int result = validate_noparam(d);
+	char *from;
 	if (result != 0) {
+		from = smtp_dialogs[1].param;
+		from[strlen(from)-1] = 0;
 		write(client_socket, smtp_ok, strlen(smtp_ok));
 		result = 1;
 	}
@@ -117,9 +122,11 @@ int mail_from(DialogRec *d){
 /* rcpt to */
 int rcpt_to(DialogRec *d){
 	int result = validate_noparam(d);
+	char *from;
 	DBRecord *record;
 	if (result != 0) {
-		
+		from = smtp_dialogs[2].param;
+		from[strlen(from)-1] = 0;
 		record = malloc(sizeof(DBRecord));
 		strcpy(record -> key, smtp_dialogs[2].param);
 		strcpy(record -> cat, smtp_cat);
@@ -197,6 +204,7 @@ int data(DialogRec *d){
 		write(client_socket, smtp_ok, strlen(smtp_ok));
 		result = 1;
 		build_email();
+		printf("build");
 	}
 	return result;
 }

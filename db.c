@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "database.c"
+#include "database.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -9,13 +9,13 @@
 
 #include <string.h>
 
-/*
+
 const char *path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database";
 const char *tmp_path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database_tmp";
-*/
+/*
 const char *path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database";
 const char *tmp_path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database_tmp";
-
+*/
 int show_dbrecord(DBRecord *rec){
 	char out[sizeof(DBRecord) + 7] = {0};
 	sprintf(out, "%-*s | %-*s | %s\n", DB_KEYLEN, rec -> key, DB_CATLEN, rec -> cat, rec -> value);
@@ -28,22 +28,6 @@ int create_database(const char *path){
 	
 	int fd_open = 0;
 	fd_open = open(path, O_RDWR | O_CREAT | O_APPEND, 0640);
-	
-	/*
-	DBRecord recs [] = {
-		{"meier", "glupschi", "BlubberSuite"},
-		{"meier", "lupschi", "Gruppenaquarium"},
-		{"huber", "fluppi", "Loftiquarium"},
-		{"schmidt", "ronny", "Gruppenaquarium"},
-		{"mueller", "gurki", "Fischglas"},
-		{"bauer", "pepino", "Waschbecken"},
-		{"florian", "supi", "Teekanne"}
-	};
-	
-	if (write(fd_open, recs, sizeof(recs)) < 0){
-		perror("write_test_data");
-	}
-	*/	
 	return fd_open;
 }
 
@@ -84,11 +68,10 @@ int run_tests(const char *path_in){
 }
 
 int filter(DBRecord *rec, const void *data) {
-	/*printf("Key: %s / Data: %s", rec -> key, data);*/
 	return (strcmp(rec -> key, data) != 0);
 }
 
-int handle_command(const char *path, const char *cmd, char *data[]) {
+int handle_command(const char *path, const int argc, const char *cmd, char *data[]) {
 	
 	DBRecord *result = malloc(sizeof(DBRecord));
 	int index = 0;
@@ -105,14 +88,24 @@ int handle_command(const char *path, const char *cmd, char *data[]) {
 	
 	/* search */
 	if (strcmp(cmd, "search") == 0){
-		strcpy(result -> key, *data);
-		index = db_search(path, 0, result);
-		show_dbrecord(result);
+		while(1){
+			strcpy(result -> key, *data);
+			strcpy(result -> cat, "");
+			index = db_search(path, counter, result);
+			if (index < 0){
+				break;
+			}
+			counter += index + 1;
+			show_dbrecord(result);
+		}
 	}
 	
 	/* add */
 	if (strcmp(cmd, "add") == 0){
-
+		if (argc < 4) {
+			printf("Too few args :( ! \n"); 
+			exit(1);
+		}
 		if (*(data+2)){
 			strcpy(result -> key, *data);
 			strcpy(result -> cat, *(data+1));
@@ -148,18 +141,25 @@ int handle_command(const char *path, const char *cmd, char *data[]) {
 	
 	/* delete */
 	if (strcmp(cmd, "delete") == 0){
-		if (*(data+1)) {
-			strcpy(result -> key, *data);
-			strcpy(result -> cat, *(data+1));
-		} else {
-			strcpy(result -> key, *data);
+		if (argc < 3) {
+			printf("Too few args :( ! \n"); 
+			exit(1);
 		}
-		while((index = db_search(path, 0, result)) >= 0) {
+		while(1) {
+			if (*(data+1)) {
+				strcpy(result -> key, *data);
+				strcpy(result -> cat, *(data+1));
+			} else {
+				strcpy(result -> key, *data);
+				strcpy(result -> cat, "");
+			}
+			index = db_search(path, 0, result);
+			if (index < 0) {
+				break;
+			}
 			db_del(path, index);
 		}
 	}
-	
-	/* db_list(path, 1, NULL, NULL); */
 	return 0;
 }
 
@@ -180,7 +180,6 @@ int main(int argc, char *argv[]){
 	}
 	
 	create_database(path);
-	/*run_tests(path);*/
-	handle_command(path, cmd, argv+2);
+	handle_command(path, argc, cmd, argv+2);
 	return 0;
 }

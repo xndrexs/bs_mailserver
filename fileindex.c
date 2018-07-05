@@ -43,13 +43,10 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 	int head = 0;									/* Für neue Mail nach From */
 	int size = 0;
 	int seek = 0;								
-	fi -> filepath = filepath;						/* Filepath merken */
+	fi -> filepath = filepath;						
 	fi -> entries = NULL;
 	fi -> totalSize = 0;
 
-	
-
-	
 	/* Mailbox öffnen */
 	if ((fd_open = open(filepath, O_RDWR)) < 0) {
 		perror("Error Open");
@@ -83,11 +80,11 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 				head = 0;
 			} 
 			(fie -> lines)++;
-			size = strlen(line) + 1;
+			size = strlen(line);
 			(fie -> size) += size;
 			(fi -> totalSize) += size;
-			
 		}
+		/*printf("SEEK: %d STRLEN: %d\n", seek, strlen(line));*/
 	}
 	free(line);
 	free(buf);
@@ -118,7 +115,8 @@ FileIndexEntry *fi_find(FileIndex *fi, int n) {
 }
 
 int fi_compactify(FileIndex *fi) {
-	/*int fd_open = 0, fd_write = 0, fd_copy = 0, fd_read = 0;
+	/*
+	int fd_open = 0, fd_write = 0, fd_copy = 0, fd_read = 0;
 	FileIndexEntry *fie = (fi -> entries);
 	char *buffer;
 	
@@ -133,8 +131,9 @@ int fi_compactify(FileIndex *fi) {
 			fd_write = write(fd_copy, buffer, fie -> size);
 		}
 		fie = fie -> next;
-	}*/
+	}
 	return 0;
+	*/
 }
 
 /*

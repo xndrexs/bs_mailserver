@@ -18,8 +18,8 @@ const char ok[] = "+OK\r\n";
 const char err[] = "-ERR\r\n";
 const char pop3_ready[] = "+OK Ein ganz toller Mailserver.\r\n";
 const char logged_in[] = "+OK Logged in.\r\n";
-/* const char *path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database"; */
-const char *path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database";
+const char *path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database"; 
+/*const char *path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database";*/
 const char cat_mailbox[] = "mailbox";
 const char cat_password[] = "password";
 const char seperator[] = "From ";
@@ -45,8 +45,8 @@ int in;
 
 DialogRec dialogs [] = {
 	/*command (17)		param (80)	state	nextstate	validator */
-	{ "user",			"", 		0, 		1,			get_user		 		},
-	{ "pass",			"",			1,		2,			authenticate			},
+	{ "user",			"", 		0, 		0,			get_user		 		},
+	{ "pass",			"",			0,		2,			authenticate			},
 	{ "stat",			"",			2, 		2,			show_mailbox_stats		},
 	{ "list",			"", 		2,		2,			show_message_details	},
 	{ "retr",			"", 		2,		2,			show_message			},
@@ -302,6 +302,7 @@ int open_mailbox(char *user) {
 	process_lock(path_to_mb);
 	fi = fi_new(path_to_mb, seperator);
 	free(record);
+	show_entries(fi);
 	return 0;
 }
 
