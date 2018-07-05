@@ -29,7 +29,7 @@ typedef struct fi
 } FileIndex;
 */
 
-extern char *filepath_tmp;
+char *mailbox_tmp = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/mailbox/mailbox_tmp";
 
 FileIndex *fi_new(const char *filepath, const char *separator) {
 	
@@ -39,10 +39,7 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 	int linemax = 1024;								/* Lange der Zeile */
 	char *line = malloc(linemax);					/* Speicher für Line belegen */
 	int fd_open = 0;								/* Deskriptor zum Öffnen der Datei */
-	int nr = 1;										/* Variable zum Zählen der Abschnitte */
-	int head = 0;									/* Für neue Mail nach From */
-	int size = 0;
-	int seek = 0;								
+	int size = 0, seek = 0, nr = 1;								
 	fi -> filepath = filepath;						
 	fi -> entries = NULL;
 	fi -> totalSize = 0;
@@ -57,11 +54,11 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 	while((seek = buf_readline(buf, line, linemax)) != -1){
 		/* Neuer Abschnitt */
 		if(strncmp(line, separator, strlen(separator)) == 0) {
-			head = 1;
 			fie_cur = calloc(1, sizeof(FileIndexEntry));
 			fie_cur -> nr = nr;
 			fie_cur -> next = NULL;
 			fie_cur -> del_flag = 0;
+			fie_cur -> seekpos = seek;
 			/* 1. Eintrag */
 			if ((fi -> entries) == NULL) {
 				fi -> entries = fie_cur;
@@ -74,17 +71,11 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 			}
 			fi -> nEntries = nr;
 			nr++;
-		} else {
-			if (head == 1) {
-				fie -> seekpos = seek;
-				head = 0;
-			} 
-			(fie -> lines)++;
-			size = strlen(line);
-			(fie -> size) += size;
-			(fi -> totalSize) += size;
 		}
-		/*printf("SEEK: %d STRLEN: %d\n", seek, strlen(line));*/
+		(fie -> lines)++;
+		size = strlen(line)+1;
+		(fie -> size) += size;
+		(fi -> totalSize) += size;
 	}
 	free(line);
 	free(buf);
@@ -115,37 +106,31 @@ FileIndexEntry *fi_find(FileIndex *fi, int n) {
 }
 
 int fi_compactify(FileIndex *fi) {
-	/*
 	int fd_open = 0, fd_write = 0, fd_copy = 0, fd_read = 0;
 	FileIndexEntry *fie = (fi -> entries);
 	char *buffer;
 	
-	fd_open = open(fi -> filepath, O_RDONLY);
-	fd_copy = open(filepath_tmp, O_RDWR | O_CREAT | O_TRUNC, 0640);
+	if((fd_open = open(fi -> filepath, O_RDONLY)) < 0) {
+		perror("error open mb");
+	}
+	
+	if((fd_copy = open(mailbox_tmp, O_RDWR | O_CREAT | O_TRUNC, 0640)) < 0){
+		perror ("error open tmp");
+	}
 
 	while(fie) {
 		if ((fie -> del_flag) == 0) {
 			lseek(fd_open, fie -> seekpos, SEEK_SET);
 			buffer = calloc(1, fie -> size);
-			fd_read = read(fd_open, buffer, fie -> size);
-			fd_write = write(fd_copy, buffer, fie -> size);
+			if ((fd_read = read(fd_open, buffer, fie -> size)) < 0){
+				perror("error read");
+			}
+			if((fd_write = write(fd_copy, buffer, fie -> size)) < 0){
+				perror("error write");
+			}
 		}
 		fie = fie -> next;
 	}
-	return 0;
-	*/
-}
-
-/*
-int main(){
-	FileIndex *fi = fi_new("/home/andreas/semester6/betriebssysteme/bs_mailserver/mailbox/joendhard.mbox", "From ");
-
-	FileIndexEntry *fie = (fi -> entries);
-	while(fie) {
-		printf("Entry %d - Size: %d / Lines: %d / Seek: %d\n", fie ->nr, fie -> size, fie -> lines, fie -> seekpos);
-		fie = fie -> next;
-	}
-	
+	rename(mailbox_tmp, fi -> filepath);
 	return 0;
 }
-*/

@@ -141,28 +141,3 @@ DialogRec *findDialogRec(char *command, DialogRec dialogspec[]) {
 	}
 	return NULL;
 }
-
-/*
-int main (void) {
-	
-
-	
-	printf("Aufgabe 1\n\n");
-	
-	char *s1 = "kuehlschrankon";
-	char *s2 = "toaster";
-	if (compare_string(s2, s1) == 0){
-		printf("Test der compare_string Methode: %s vorhanden in %s\n", s2, s1);
-	}
-	
-	DialogRec *dialog = findDialogRec(s1, dialogs);
-	printf("DialogRec gefunden: %s\n\n", dialog -> command);
-	
-	printf("Aufgabe 2\n\n");
-	
-	ProlResult prolresult = processLine(s1, 1, dialogs);
-	printf("Info: %s\nCommand: %s\nParam: %s\nIsValid: %f\n", prolresult.info, prolresult.dialogrec -> command, prolresult.dialogrec -> param, prolresult.dialogrec -> is_valid);
-	
-	return 0;
-}
-*/

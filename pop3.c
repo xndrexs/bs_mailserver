@@ -302,7 +302,6 @@ int open_mailbox(char *user) {
 	process_lock(path_to_mb);
 	fi = fi_new(path_to_mb, seperator);
 	free(record);
-	show_entries(fi);
 	return 0;
 }
 
