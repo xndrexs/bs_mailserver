@@ -110,15 +110,16 @@ int fi_compactify(FileIndex *fi) {
 	FileIndexEntry *fie = (fi -> entries);
 	char *buffer;
 	
-	if((fd_open = open(fi -> filepath, O_RDONLY)) < 0) {
+	if((fd_open = open(fi -> filepath, O_RDWR)) < 0) {
 		perror("error open mb");
 	}
 	
 	if((fd_copy = open(mailbox_tmp, O_RDWR | O_CREAT | O_TRUNC, 0640)) < 0){
 		perror ("error open tmp");
 	}
-
+	
 	while(fie) {
+
 		if ((fie -> del_flag) == 0) {
 			lseek(fd_open, fie -> seekpos, SEEK_SET);
 			buffer = calloc(1, fie -> size);
@@ -128,7 +129,10 @@ int fi_compactify(FileIndex *fi) {
 			if((fd_write = write(fd_copy, buffer, fie -> size)) < 0){
 				perror("error write");
 			}
+			write(fd_copy, "\n", 1);	
+			free(buffer);
 		}
+		
 		fie = fie -> next;
 	}
 	rename(mailbox_tmp, fi -> filepath);

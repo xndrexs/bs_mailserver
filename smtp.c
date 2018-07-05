@@ -57,7 +57,8 @@ int build_email(){
 	int fd_open = 0, fd_write = 0, fd_read = 0;
 	int file_size = 0;
 	char *content;
-	time_t time;
+	time_t ltime = 0;
+	time(&ltime);
 	
 	/* Zwischen gespeicherte Mail (nur Inhalt) öffnen */
 	if((fd_open = open(tmp_mail, O_RDONLY)) < 0){
@@ -79,7 +80,7 @@ int build_email(){
 	}
 	
 	/* From Zeile generieren und schreiben */
-	sprintf(out, "From %s %s\n", smtp_dialogs[1].param, ctime(&time));
+	sprintf(out, "From %s %s\n", smtp_dialogs[1].param, ctime(&ltime));
 	
 	if ((fd_write = write(fd_open, out, strlen(out))) < 0){
 		perror("error write");

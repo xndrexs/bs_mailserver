@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -18,12 +19,15 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include "database.h"
+
 #define PMAX 100
 
-const char *server_ip = "127.0.0.1";
-const int pop3_port = 5555;
-const int smtp_port = 5556;
+char *server_ip = "127.0.0.1";
+int pop3_port = 8110;
+int smtp_port = 8025;
 int pcurrent = 0;
+extern char *path;
 
 int process_pop3(int infd, int outfd);
 void *process_smtp(void *args);
@@ -171,9 +175,22 @@ int setup_socket(const int port) {
 	return server_socket;
 }
 
-int start_server(){
-	int pop3_socket = 0, smtp_socket = 0;
+int check_ressources() {
+	DBRecord record = {"port", "smtp", ""};
+	if((db_search(path, 0, &record)) >= 0) {
+		smtp_port = atoi(record.value);
+	}
+	strcpy(record.key, "port");
+	strcpy(record.cat, "smtp");
+	if((db_search(path, 0, &record)) >= 0) {
+		pop3_port = atoi(record.value);
+	}
+	return 0;
+}
 
+int start_server(){
+	
+	int pop3_socket = 0, smtp_socket = 0;
 	pop3_socket = setup_socket(pop3_port);
 	my_printf("Server started for POP3 ... ");
 	smtp_socket = setup_socket(smtp_port);
