@@ -53,8 +53,7 @@ int buf_readline(LineBuffer *b, char *line, int linemax) {
 	
 	/* Zeiger für aktuellen Buchstaben und Seperator */
 	char *current_letter = &(b -> buffer[b -> here]);
-	char *current_sep = b -> linesep;
-	char *display_line = line;
+	const char *current_sep = b -> linesep;
 	
 	/* Position des Zeilenanfangs merken */
 	int offset = buf_where(b);
