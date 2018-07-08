@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "database.h"
+#include "config.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -179,7 +180,7 @@ int main(int argc, char *argv[]){
 		arg += 1;
 	}
 	
-	create_database(path);
-	handle_command(path, argc, cmd, argv+2);
+	create_database(database);
+	handle_command(database, argc, cmd, argv+2);
 	return 0;
 }

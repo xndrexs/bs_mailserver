@@ -14,19 +14,14 @@
 #include "database.h"
 #include "linebuffer.h"
 #include "fileindex.h"
+#include "config.h"
 
 const char smtp_ready[] = "220 Ein ganz toller SMTP-Server.\r\n";
 const char error[] = "500\n";
 const char smtp_ok[] = "250 Ok\r\n";
 const char smtp_quit[] = "221 Bye bye.\r\n";
 const char start_data[] = "354 Data now.\r\n";
-const char *smtp_cat = "smtp";
 int client_socket = 0;
-
-/*const char *tmp_mail = "/home/andreas/semester6/betriebssysteme/bs_mailserver/mailbox/tmp_mail";*/
-const char *tmp_mail = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/mailbox/tmp_mail"; 
-extern char *path;
-extern char *cat_mailbox;
 char *path_to_mb;
 
 int get_filesize(const char *path);
@@ -61,12 +56,12 @@ int build_email(){
 	time(&ltime);
 	
 	/* Zwischen gespeicherte Mail (nur Inhalt) öffnen */
-	if((fd_open = open(tmp_mail, O_RDONLY)) < 0){
+	if((fd_open = open(mailbox_tmp, O_RDONLY)) < 0){
 		perror("error open");
 	}
 	
 	/* Inhalt einlesen */
-	file_size = get_filesize(tmp_mail);
+	file_size = get_filesize(mailbox_tmp);
 	content = malloc(file_size);
 	if ((fd_read = read(fd_open, content, file_size)) < 0){
 		perror("read");
@@ -92,7 +87,7 @@ int build_email(){
 	}
 	
 	close(fd_open);
-	remove(tmp_mail);
+	remove(mailbox_tmp);
 	remove_lock_file(path_to_mb);
 	return 0;
 }
@@ -130,14 +125,14 @@ int rcpt_to(DialogRec *d){
 		from[strlen(from)-1] = 0;
 		record = malloc(sizeof(DBRecord));
 		strcpy(record -> key, smtp_dialogs[2].param);
-		strcpy(record -> cat, smtp_cat);
+		strcpy(record -> cat, cat_smtp);
 		/* Prüfen, ob Empfänger vorhanden ist */
-		result = db_search(path, 0, record);
+		result = db_search(database, 0, record);
 		if (result >= 0) {
 			strcpy(record -> key, record -> value);
 			strcpy(record -> cat, "mailbox");
 			/* Mailbox zum Emfänger finden */
-			result = db_search(path, 0, record);
+			result = db_search(database, 0, record);
 			if (result >= 0) {
 				result = 1;
 				path_to_mb = malloc(DB_VALLEN); 
@@ -165,7 +160,7 @@ int data(DialogRec *d){
 	LineBuffer *b;
 	
 	if (result == 0) {
-		fd_open = open(tmp_mail, O_RDWR | O_CREAT | O_TRUNC, 0644);
+		fd_open = open(mailbox_tmp, O_RDWR | O_CREAT | O_TRUNC, 0644);
 		if (fd_open < 0){
 			perror("error read");
 			exit(1);

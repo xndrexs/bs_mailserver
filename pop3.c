@@ -13,15 +13,12 @@
 #include "database.h"
 #include "linebuffer.h"
 #include "fileindex.h"
+#include "config.h"
 
 const char ok[] = "+OK\r\n";
 const char err[] = "-ERR\r\n";
 const char pop3_ready[] = "+OK Ein ganz toller Mailserver.\r\n";
 const char logged_in[] = "+OK Logged in.\r\n";
-const char *path = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database"; 
-/*const char *path = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database";*/
-const char cat_mailbox[] = "mailbox";
-const char cat_password[] = "password";
 const char seperator[] = "From ";
 const char crlf[] = "\r\n";
 
@@ -297,7 +294,7 @@ int open_mailbox(char *user) {
 	char *path_to_mb = malloc(DB_VALLEN);
 	strcpy(record -> cat, cat_mailbox);
 	strcpy(record -> key, user);
-	db_search(path, 0, record);
+	db_search(database, 0, record);
 	strcpy(path_to_mb, record -> value);
 	process_lock(path_to_mb);
 	fi = fi_new(path_to_mb, seperator);
@@ -311,7 +308,7 @@ int login_user(char *user, char *password) {
 	int result;
 	strcpy(record -> cat, cat_password);
 	strcpy(record -> key, user);
-	db_search(path, 0, record);
+	db_search(database, 0, record);
 	result = !strcmp(record -> value, password);
 	free(record);
 	return result;

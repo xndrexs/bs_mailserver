@@ -1,5 +1,7 @@
 #include "fileindex.h"
 #include "linebuffer.h"
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -28,8 +30,6 @@ typedef struct fi
   int totalSize;            Summe der size-Werte aller Abschnitte
 } FileIndex;
 */
-
-char *mailbox_tmp = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/mailbox/mailbox_tmp";
 
 FileIndex *fi_new(const char *filepath, const char *separator) {
 	

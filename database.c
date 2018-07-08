@@ -7,12 +7,10 @@
 #include <errno.h>
 
 #include "database.h"
+#include "config.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
-
-char *filepath_tmp = "/home/mi/apoeh001/semester6/betriebssysteme/mailserver/database/database_tmp";
-/*char *filepath_tmp = "/home/andreas/semester6/betriebssysteme/bs_mailserver/database/database_tmp";*/
 
 
 int get_filesize(const char *path){
@@ -210,7 +208,7 @@ int db_del(const char *filepath, int index) {
 		perror("db_del, open");
 	}
 	
-	fd_copy = open(filepath_tmp, O_RDWR | O_CREAT | O_TRUNC, 0644);
+	fd_copy = open(database_tmp, O_RDWR | O_CREAT | O_TRUNC, 0644);
 	if (fd_copy < 0){
 		perror("db_del, copy");
 	}
@@ -231,7 +229,7 @@ int db_del(const char *filepath, int index) {
 		skip_index++;
 	}	
 	
-	rename(filepath_tmp, filepath);
+	rename(database_tmp, filepath);
 	
 	return 0;
 }

@@ -20,6 +20,7 @@
 #include <errno.h>
 
 #include "database.h"
+#include "config.h"
 
 #define PMAX 100
 
@@ -27,7 +28,6 @@ char *server_ip = "127.0.0.1";
 int pop3_port = 8110;
 int smtp_port = 8025;
 int pcurrent = 0;
-extern char *path;
 
 int process_pop3(int infd, int outfd);
 void *process_smtp(void *args);
@@ -177,12 +177,12 @@ int setup_socket(const int port) {
 
 int check_ressources() {
 	DBRecord record = {"port", "smtp", ""};
-	if((db_search(path, 0, &record)) >= 0) {
+	if((db_search(database, 0, &record)) >= 0) {
 		smtp_port = atoi(record.value);
 	}
 	strcpy(record.key, "port");
 	strcpy(record.cat, "smtp");
-	if((db_search(path, 0, &record)) >= 0) {
+	if((db_search(database, 0, &record)) >= 0) {
 		pop3_port = atoi(record.value);
 	}
 	return 0;
