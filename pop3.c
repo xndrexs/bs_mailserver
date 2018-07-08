@@ -358,18 +358,17 @@ int process_pop3(int infd, int outfd) {
 	int linemax = 1024;	
 	int state = 0;
 	char *line;
-	LineBuffer *b;
+	LineBuffer *b = buf_new(infd, "\r\n");
 	out = outfd;
 	in = infd;
 	write(outfd, pop3_ready, strlen(pop3_ready));
 	
 	while(1){
 		line = calloc(1, linemax);
-		b = buf_new(infd, "\r");
 		buf_readline(b, line, linemax);
 		prolresult = processLine(line, state, dialogs);
 		free(line);
-		free(b);
+		
 		/* quit */
 		if(prolresult.failed == -17){
 			my_printf("Client disconnected");
@@ -382,6 +381,6 @@ int process_pop3(int infd, int outfd) {
 			write(outfd, err, sizeof(err));
 		}
 	}
-	
+	free(b);
 	return 0;
 }

@@ -109,6 +109,23 @@ int fi_compactify(FileIndex *fi) {
 	int fd_open = 0, fd_write = 0, fd_copy = 0, fd_read = 0;
 	FileIndexEntry *fie = (fi -> entries);
 	char *buffer;
+	int changed = 0;
+	
+	/* Prüfen, ob überhaupt eine Mail gelöscht werden soll */
+	while(fie) {
+		if ((fie -> del_flag) != 0) {
+			changed = 1;
+			break;
+		}
+		fie = fie -> next;
+	}
+	
+	if (changed == 0) {
+		return 0;
+	}
+	
+	/* Marked */
+	fie = (fi -> entries);
 	
 	if((fd_open = open(fi -> filepath, O_RDWR)) < 0) {
 		perror("error open mb");

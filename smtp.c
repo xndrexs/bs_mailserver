@@ -157,7 +157,7 @@ int data(DialogRec *d){
 	int result = validate_noparam(d);
 	int linemax = 1024, fd_open, fd_write;
 	char *line;
-	LineBuffer *b;
+	LineBuffer *b = buf_new(client_socket, "\r\n");
 	
 	if (result == 0) {
 		fd_open = open(mailbox_tmp, O_RDWR | O_CREAT | O_TRUNC, 0644);
@@ -169,11 +169,9 @@ int data(DialogRec *d){
 		while(1){
 			
 			line = calloc(1, linemax);
-			b = buf_new(client_socket, "\r");
 			buf_readline(b, line, linemax);
 			if (strcmp(line, ".") == 0){
 				free(line);
-				free(b);
 				fd_write = write(fd_open, "\n", strlen("\n"));
 				if (fd_write < 0){
 					perror("error write");
@@ -192,7 +190,6 @@ int data(DialogRec *d){
 				exit(1);
 			}
 			free(line);
-			free(b);
 			
 		}
 		close(fd_open);
@@ -200,8 +197,9 @@ int data(DialogRec *d){
 		write(client_socket, smtp_ok, strlen(smtp_ok));
 		result = 1;
 		build_email();
-		printf("build");
+		
 	}
+	free(b);
 	return result;
 }
 
@@ -223,17 +221,20 @@ void *process_smtp(void *args) {
 	int state = 0;
 	char *line;
 	LineBuffer *b;
+	
 	client_socket = *((int*)args);
+	b = buf_new(client_socket, "\r\n");
+	
 	write(client_socket, smtp_ready, strlen(smtp_ready));
+	
 	while(1){
 		line = calloc(1, linemax);
-		b = buf_new(client_socket, "\r");
 		if(buf_readline(b, line, linemax) < 0) {
 			break;
 		};
 		prolresult = processLine(line, state, smtp_dialogs);
 		free(line);
-		free(b);
+		
 		/* quit */
 		if(prolresult.failed == -17){
 			my_printf("Client disconnected");
@@ -246,5 +247,6 @@ void *process_smtp(void *args) {
 			write(client_socket, error, strlen(error));
 		}
 	}
+	free(b);
 	return NULL;
 }

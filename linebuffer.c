@@ -60,7 +60,13 @@ int buf_readline(LineBuffer *b, char *line, int linemax) {
 	}
 	
 	while(1) {
-		
+		/*
+		printf("b->here: %d\n", b->here);
+		printf("b->end: %d\n", b->end);
+		printf("current char: %s\n", current_letter);
+		printf("current sep: %s\n", current_sep);
+		printf("length sep: %d\n", b->lineseplen);
+		*/
 		/* Ende des Buffers erreicht */
 		if(b -> here >= b -> end) {
 			read_buffer(b);

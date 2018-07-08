@@ -4,7 +4,7 @@
 #define database "database.dat"
 #define database_tmp "database_tmp.dat"
 
-#define mailbox_tmp "/mailbox/mailbox_tmp"
+#define mailbox_tmp "mailbox/mailbox_tmp"
 
 #define cat_mailbox "mailbox"
 #define cat_password "password"
