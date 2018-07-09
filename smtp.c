@@ -75,7 +75,7 @@ int build_email(){
 	}
 	
 	/* From Zeile generieren und schreiben */
-	sprintf(out, "From %s %s\n", smtp_dialogs[1].param, ctime(&ltime));
+	sprintf(out, "From %s %s", smtp_dialogs[1].param, ctime(&ltime));
 	
 	if ((fd_write = write(fd_open, out, strlen(out))) < 0){
 		perror("error write");

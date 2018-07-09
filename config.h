@@ -10,6 +10,8 @@
 #define cat_password "password"
 #define cat_smtp "smtp"
 
+#define logging_out "+OK Bye bye.\r\n"
+
 int my_printf(const char *message);
 
 #endif

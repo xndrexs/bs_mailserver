@@ -50,7 +50,7 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 	buf = buf_new(fd_open, "\n");
 	
 	while((seek = buf_readline(buf, line, linemax)) != -1){
-		/* Neuer Abschnitt */
+		/* Neuer Abschnitt, ab From-Zeile */
 		if(strncmp(line, separator, strlen(separator)) == 0) {
 			fie_cur = calloc(1, sizeof(FileIndexEntry));
 			fie_cur -> nr = nr;
@@ -69,12 +69,13 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 			}
 			fi -> nEntries = nr;
 			nr++;
+		/* Zeilen zum Abschnitt hinzufügen */
 		} else {
 			if (head == 1) {
 				fie -> seekpos = seek;
 				head = 0;
 			} 
-			size = strlen(line)+1;
+			size = strlen(line) + 1;
 			(fie -> lines)++;
 			(fie -> size) += size;
 			(fi -> totalSize) += size;
@@ -111,7 +112,7 @@ FileIndexEntry *fi_find(FileIndex *fi, int n) {
 int fi_compactify(FileIndex *fi) {
 	int fd_open = 0, fd_write = 0, fd_copy = 0;
 	int changed = 0, seek = 0, linemax = 1024;
-	char *line = malloc(linemax);
+	char *line;
 	FileIndexEntry *fie = (fi -> entries);
 	LineBuffer *buf;
 	
@@ -131,6 +132,7 @@ int fi_compactify(FileIndex *fi) {
 	
 	/* Wenn etwas gelöscht werden muss */
 	fie = (fi -> entries);
+	line = malloc(linemax);
 	
 	if((fd_open = open(fi -> filepath, O_RDWR)) < 0) { perror("error open mb");	}
 	if((fd_copy = open(mailbox_tmp, O_RDWR | O_CREAT | O_TRUNC, 0640)) < 0){ perror ("error open tmp");	}
@@ -144,8 +146,6 @@ int fi_compactify(FileIndex *fi) {
 			/* Bedingung erfüllt, wenn die aktuelle Line die From-Zeile ist */
 			if(seek + strlen(line) + 1 >= ((fie -> next) -> seekpos)) {
 				fie = fie -> next;
-				printf("line %s\n", line);
-				printf("seek: %d seekpos: %d\n", seek, fie -> seekpos);	
 			}		
 		}
 		
@@ -156,6 +156,7 @@ int fi_compactify(FileIndex *fi) {
 	}
 	
 	free(line);
+	free(buf);
 	rename(mailbox_tmp, fi -> filepath);
 	remove(mailbox_tmp);
 	return 0;

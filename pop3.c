@@ -130,7 +130,6 @@ int reset_marked(DialogRec *d) {
 /* quit */
 int quit_connection(DialogRec *d) {
 	int result = validate_noparam(d);
-	char *logging_out = "+OK Bye bye.\r\n";
 
 	if (result == 0){
 		my_printf("Client disconnecting ...");
@@ -203,6 +202,7 @@ int show_message(DialogRec *d) {
 			result = 0;
 		}
 	}
+	free(buf);
 	free(line);
 	return result;
 }
