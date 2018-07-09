@@ -36,18 +36,16 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 	FileIndex *fi = malloc(sizeof(FileIndex));		/* Neuer FileIndex */
 	FileIndexEntry *fie, *fie_cur;					/* Variable für Entries */
 	LineBuffer *buf;								/* Variable für Buffer */
-	int linemax = 1024;								/* Lange der Zeile */
+	int linemax = 1024, size = 0, seek = 0, nr = 1, head = 0;
 	char *line = malloc(linemax);					/* Speicher für Line belegen */
-	int fd_open = 0;								/* Deskriptor zum Öffnen der Datei */
-	int size = 0, seek = 0, nr = 1;								
+	int fd_open = 0;
+								
 	fi -> filepath = filepath;						
 	fi -> entries = NULL;
 	fi -> totalSize = 0;
 
 	/* Mailbox öffnen */
-	if ((fd_open = open(filepath, O_RDWR)) < 0) {
-		perror("Error Open");
-	}
+	if ((fd_open = open(filepath, O_RDONLY)) < 0) {	perror("Error Open"); }
 	
 	buf = buf_new(fd_open, "\n");
 	
@@ -58,7 +56,7 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 			fie_cur -> nr = nr;
 			fie_cur -> next = NULL;
 			fie_cur -> del_flag = 0;
-			fie_cur -> seekpos = seek;
+			head = 1;
 			/* 1. Eintrag */
 			if ((fi -> entries) == NULL) {
 				fi -> entries = fie_cur;
@@ -71,11 +69,16 @@ FileIndex *fi_new(const char *filepath, const char *separator) {
 			}
 			fi -> nEntries = nr;
 			nr++;
+		} else {
+			if (head == 1) {
+				fie -> seekpos = seek;
+				head = 0;
+			} 
+			size = strlen(line)+1;
+			(fie -> lines)++;
+			(fie -> size) += size;
+			(fi -> totalSize) += size;
 		}
-		(fie -> lines)++;
-		size = strlen(line)+1;
-		(fie -> size) += size;
-		(fi -> totalSize) += size;
 	}
 	free(line);
 	free(buf);
@@ -106,10 +109,11 @@ FileIndexEntry *fi_find(FileIndex *fi, int n) {
 }
 
 int fi_compactify(FileIndex *fi) {
-	int fd_open = 0, fd_write = 0, fd_copy = 0, fd_read = 0;
+	int fd_open = 0, fd_write = 0, fd_copy = 0;
+	int changed = 0, seek = 0, linemax = 1024;
+	char *line = malloc(linemax);
 	FileIndexEntry *fie = (fi -> entries);
-	char *buffer;
-	int changed = 0;
+	LineBuffer *buf;
 	
 	/* Prüfen, ob überhaupt eine Mail gelöscht werden soll */
 	while(fie) {
@@ -121,37 +125,38 @@ int fi_compactify(FileIndex *fi) {
 	}
 	
 	if (changed == 0) {
+		my_printf("Nothing to delete.");
 		return 0;
 	}
 	
-	/* Marked */
+	/* Wenn etwas gelöscht werden muss */
 	fie = (fi -> entries);
 	
-	if((fd_open = open(fi -> filepath, O_RDWR)) < 0) {
-		perror("error open mb");
-	}
+	if((fd_open = open(fi -> filepath, O_RDWR)) < 0) { perror("error open mb");	}
+	if((fd_copy = open(mailbox_tmp, O_RDWR | O_CREAT | O_TRUNC, 0640)) < 0){ perror ("error open tmp");	}
 	
-	if((fd_copy = open(mailbox_tmp, O_RDWR | O_CREAT | O_TRUNC, 0640)) < 0){
-		perror ("error open tmp");
-	}
+	buf = buf_new(fd_open, "\n");
 	
-	while(fie) {
-
-		if ((fie -> del_flag) == 0) {
-			lseek(fd_open, fie -> seekpos, SEEK_SET);
-			buffer = calloc(1, fie -> size);
-			if ((fd_read = read(fd_open, buffer, fie -> size)) < 0){
-				perror("error read");
-			}
-			if((fd_write = write(fd_copy, buffer, fie -> size)) < 0){
-				perror("error write");
-			}
-			write(fd_copy, "\n", 1);	
-			free(buffer);
+	/* Zeilenweise kopieren */
+	while((seek = buf_readline(buf, line, linemax)) != -1) {
+		
+		if(fie -> next) {
+			/* Bedingung erfüllt, wenn die aktuelle Line die From-Zeile ist */
+			if(seek + strlen(line) + 1 >= ((fie -> next) -> seekpos)) {
+				fie = fie -> next;
+				printf("line %s\n", line);
+				printf("seek: %d seekpos: %d\n", seek, fie -> seekpos);	
+			}		
 		}
 		
-		fie = fie -> next;
+		if((fie -> del_flag) == 0){
+			if((fd_write = write(fd_copy, line, strlen(line))) < 0) { perror("error write"); }
+			if((fd_write = write(fd_copy, "\n", 1)) < 0) { perror("error write"); }
+		}
 	}
+	
+	free(line);
 	rename(mailbox_tmp, fi -> filepath);
+	remove(mailbox_tmp);
 	return 0;
 }

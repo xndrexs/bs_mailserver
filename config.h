@@ -10,4 +10,6 @@
 #define cat_password "password"
 #define cat_smtp "smtp"
 
+int my_printf(const char *message);
+
 #endif

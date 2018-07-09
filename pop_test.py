@@ -1,5 +1,5 @@
 import poplib
-pop = poplib.POP3("localhost", 5555)
+pop = poplib.POP3("localhost", 8110)
 pop.set_debuglevel(1)
 pop.user("a")
 pop.pass_("a")

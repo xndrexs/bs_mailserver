@@ -133,6 +133,7 @@ int quit_connection(DialogRec *d) {
 	char *logging_out = "+OK Bye bye.\r\n";
 
 	if (result == 0){
+		my_printf("Client disconnecting ...");
 		write(out, logging_out, strlen(logging_out));
 		if (remove_lock_file(fi -> filepath) != 0) {
 			perror("error deleting");
