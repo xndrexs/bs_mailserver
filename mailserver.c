@@ -50,9 +50,7 @@ int handle_connection(int client_socket) {
 int handle_smtp_connection(int client_socket) {
 	pthread_t tid[PMAX];
 	my_printf("Client connected on SMTP");
-	pthread_create(&tid[pcurrent], NULL, process_smtp, &client_socket);
-	pcurrent++;
-	/*pthread_detach(tid);*/
+	pthread_create(&tid[pcurrent++], NULL, process_smtp, &client_socket);
 	return 0;
 }
 

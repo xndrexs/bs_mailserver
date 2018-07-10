@@ -67,8 +67,6 @@ int build_email(){
 		perror("read");
 	}
 	
-	close(fd_open);
-	
 	/* Mailbox öffnen */
 	if((fd_open = open(path_to_mb, O_RDWR | O_APPEND)) < 0) {
 		perror("error open");
@@ -166,13 +164,13 @@ int data(DialogRec *d){
 			exit(1);
 		}
 		write(client_socket, start_data, strlen(start_data));
+		
 		while(1){
-			
 			line = calloc(1, linemax);
 			buf_readline(b, line, linemax);
 			if (strcmp(line, ".") == 0){
 				free(line);
-				fd_write = write(fd_open, "\n", strlen("\n"));
+				fd_write = write(fd_open, "\r\n", strlen("\r\n"));
 				if (fd_write < 0){
 					perror("error write");
 					exit(1);
@@ -208,7 +206,6 @@ int quit_smtp(DialogRec *d){
 	int result = validate_noparam(d);
 	if (result == 0){
 		write(client_socket, smtp_quit, strlen(smtp_quit));
-		close(client_socket);
 		return -17;
 	}
 	return 1;
@@ -248,5 +245,6 @@ void *process_smtp(void *args) {
 		}
 	}
 	free(b);
+	close(client_socket);
 	return NULL;
 }
